@@ -7,7 +7,7 @@ __pycache__/
 *.so
 
 # Token/Sec.Files
-token.*
+.token
 
 # Distribution / packaging
 .Python
