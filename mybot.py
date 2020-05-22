@@ -15,4 +15,12 @@ async def on_message(message):
     if message.content.startswith("$hello"):
         await message.channel.send("Hello!")
 
-client.run("NzEzNDQ0NjgzMjIwNTE2ODY0.XsgNnw.ipJYMRc1JbIzrcfXCcpRISUx6b8")
+# Discord Token darf nicht im Internet veröffentlicht werden. Daher:
+# den Token in einem seperatem File speichern und diese in die .gitignore
+# Datei aufnehmen, sodass keine Veröffentlichung erfolgt.
+
+file_object = open( "token.txt", "r" )
+
+token = file_object.read()
+
+client.run(token)
