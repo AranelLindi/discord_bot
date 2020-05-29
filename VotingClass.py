@@ -11,19 +11,20 @@ from VoteOption import VoteOption  # Objekt für Wahloption
 class VotingClass(commands.Cog):
     # GLOBALE VARIABLEN
     __Voters = {*()}  # Enthält alle, die ihre Stimme abgegeben haben
-    __Options = {}  # Enthält ein Tupel aus key und value, wobei value das VoteOption-Objekt ist
+    __Options = {}  # Enthält ein Tupel aus key und value, wobei value das VoteOption-Objekt ist und key die fortlaufende Abstimmungsnummer
 
     def __init__(self, bot):  # Konstruktor
         self.bot = bot
-        #self.countVoteOptions = 0
-        print("Konstruktor wurde aufgerufen!")
+        self.__Pause = False # Keine Pause beim initialisieren!
+        
+        #print("Konstruktor wurde aufgerufen!")
         # self.__Organizer = organizer  # User der Abstimmung eingeleitet hat
 
 
-    def __del__(self):
+    def __del__(self): # Destruktor
         print("Destruktor wurde aufgerufen!")
 
-    # speichert, wer die Abstimmung begonnen hat. Nur dieser hat Zugriff auf manche Kommandos
+    # speichert, wer die Abstimmung begonnen hat. Nur dieser hat Zugriff auf manche Kommandos  [ GERADE NOCH DEAKTIVIERT ]
     def setCreator(self, creator):
         self.__Organizer = creator
 
@@ -40,46 +41,111 @@ class VotingClass(commands.Cog):
     #    else:
             # Option bereits vorhanden:
     #        await ctx.channel.send("- Option bereits vorhanden! -")
-    def addVotingOption(self, number:int, arg:str):
-        # Neues VoteOption Objekt mit arg (Abstimmungsbeschreibung) erstellen:
-        Option = VoteOption(arg)
+    
+    # Diese Funktion wird ausschließlich durch das Kommando !Voting ... aufgerufen und erhält
+    # als Parameter die Wahlmöglichkeiten. Es ist beabsichtigt, nachträglich weitere
+    # Möglichkeiten hinzufügen bzw. entfernen zu können:
+    def addVotingOptions(self, number:int, arguments):#, *args):
+        counter = 1 # Fortlaufende Nummer um Wahlmöglichkeiten durchzunumerieren
 
-        # Ein Pair zusammen mit der fortlaufenden Nummer (NICHT Stimmenanzahl!) erstellen:
-        pair = zip( number, Option )
+        # Iteriert durch die Liste (arguments)
+        for x in arguments:
+            # x ist ein String
 
-        # Dem Dictionary das Pair hinzufügen:
-        self.__Options.update(pair)
+            # neues VoteOption Objekt mit x anlegen:
+            Option = VoteOption(x) # 
+            
+            # Objekt an counter-Stelle einfügen (counter steigt stetig, daher keine Rücksicht auf Überschreibungen etc.)
+            self.__Options[counter] = Option
+            
+            # inkrementieren:
+            counter += 1
     #
     #
 
+    # Ermöglicht es einem User während einer Abstimmung seine Stimme für eine Wahlmöglichkeit abzugeben:
     @commands.command(name="Vote")
-    async def voteFor(self, ctx, option: int):
+    async def Vote(self, ctx, option:int):
+        # Zuerst prüfen ob eine Abstimmungspause gilt:
         if self.__Pause == True:
-            await ctx.channel.send("Stimmabgabe gerade nicht möglich!")
+            await ctx.send("Stimmabgabe gerade nicht möglich!")
             return
-
-        # Wenn jemand abgestimmt hat, folgendes prüfen:
+        
+        # Wenn jemand mittels Kommando abgestimmt hat, folgendes prüfen:
         # - Hat er bereits abgestimmt?
         # - Ist die Wahloption (option) gültig, also bildet sie auf ein Element im dict ab
 
         # Mit Hilfe von Mengenoperationen prüfen ob Abstimmender schon in der Wählerliste ist:
-        OneElementSet = set(ctx.message.author)
-        if not OneElementSet.issubset(self.__Voters):
+        if str(ctx.message.author) not in self.__Voters:
             # Hier: Hat noch nicht abgestimmt
-            if self.__Options.keys()[option] is not None:
+        
+            if option > 0 and option <= len(self.__Options):
                 # Hier: Stimmabgabe bildet auf gültiges Element ab: Stimme ist gültig!
-                self.__Options.values()[option].addVote()
+                
+                # Stimme verbuchen:
+                # dazu, dass option-te Element aus dict referenzieren:
+                _VoteOption = self.__Options[option]
+                # und Wert seiner Stimme inkrementieren:
+                _VoteOption.votes += 1
+            else:
+                # Hat jemand eine Stimme abgegeben, die auf kein Element abbildet, eine Meldung
+                # ausgeben, da es sich um ein versehen handeln könnte.
+                await ctx.send(f"{ctx.author.name}, du hast für eine ungültige Option gestimmt, aber du bekommst noch eine Chance!")
+        #else:
+            # Hier: User hat schon einmal abgestimmt. Falls erforderlich, 'else:' entkommentieren und hier Vorkehrungen treffen:
+            #print("Du hast schon einmal abgestimmt!")
     #
     #
 
+    # Ermöglicht es dem Abstimmungsleiter, das Abstimmungsergebnis zu veröffentlichen. Dabei wird keine Rücksicht darauf 
+    # genommen, dass jeder anwesende User seine Stimme abgegeben hat.
     @commands.command(name="ShowResult")
     async def showResult(self, ctx):
         # Darf nur der User ausführen, der die Abstimmmung begonnen hat.
         # Beendet gleichzeit die Abstimmung und zerstört das Objekt
-        pass
+        
+        # 1.) Anzahl der Stimmen ermitteln, dazu durch gesamtes dict iterieren und Stimmen zählen
+        AnzahlGesamtstimmten = 0
+        for x in self.__Options.values():
+            AnzahlGesamtstimmten += x.votes # Stimmen jeder Wahloption aufaddieren
+        
+        # Obligatorische Prüfung ob Gesamtanzahl Stimmen gleich 0 ist.
+        # Dann würde unten eine Division durch Null stehen. Hier dann
+        # also abbrechen:
+        if AnzahlGesamtstimmten == 0:
+            await ctx.send("Abgegebene Anzahl Stimmen: 0. Abbruch!")
+            return
+
+
+    
+
+        # Im Anschluss, nochmals durch dict iterieren und jetzt das Stimmenverhältnis (Stimmen pro Option / Gesamtstimmen) ausrechnen
+        
+        Zeichenkette = "" # Enthält nacheinander gesamte Ausgabe, die am Schluss gepostet wird
+        counter = 1 # fortlaufende Nummer um Wahlmöglichkeiten korrekt darzustellen (kann nicht aus dict extrahiert werden, da hier nur values() und nicht durch keys() iteriert wird)
+        
+        AnzahlBalken = lambda counter: '#' * counter # gibt '#' genau i-Mal zurück
+        VerhältnisBalken = lambda x,y,z: round(x/y*z) # berechnet das Verhältnis der Stimmen der Wahlmöglichkeit geteilt durch Gesamtstimmen mal maximale Anzahl an Balkensymbolen
+
+        # durch dict iterieren
+        for x in self.__Options.values():
+            # x ist jeweils ein VoteOption-Objekt
+
+            # Stimmen der Wahloption bekommen:
+            OptionStimmen = x.votes
+
+            # String für Ausgabe bilden, dazu mittels der beiden Lambda-Funktionen die Stärke des Balkens ermitteln:    
+            Zeichenkette += str(counter) + ".) " + str(AnzahlBalken( VerhältnisBalken(OptionStimmen, AnzahlGesamtstimmten, 20) )) + " " + str(OptionStimmen) + ": " + str(x.getDescription()) + "\n"
+            
+            # inkrementieren für nächste Iteration:
+            counter += 1
+        
+        await ctx.send(Zeichenkette) # Zeichenkette ausgeben
     #
     #
 
+    # Ermöglichst es dem Abstimmungsleiter eine Pause der Stimmenabgabe zu bewirken.
+    # So lange diese gilt, können von keinem User Stimmen abgegeben werden.
     @commands.command(name="PauseVoting")
     async def pauseVoting(self, ctx):
         # Pausiert die Abstimmung: Bisherige Stimmen bleiben erhalten
@@ -89,6 +155,7 @@ class VotingClass(commands.Cog):
     #
     #
 
+    # Erlaubt es von Seiten des Abstimmungsleiters wieder, Stimmen abzugeben.
     @commands.command(name="AllowVoting")
     async def allowVoting(self, ctx):
         # Erlaubt das Abstimmen wieder für alle
@@ -97,6 +164,7 @@ class VotingClass(commands.Cog):
     #
     #
 
+    # CLOSE VOTING WURDE IN DAS MAIN FILE VERSCHOBEN UM DAS COG WIEDER ENTLADEN ZU KÖNNEN. HIER WÜRDE DAS NÄMLICH NICHT FUNKTIONIEREN
     #@commands.command(name="CloseVoting")
     #async def closeVoting(self, ctx):
         # Schließt die Abstimmung: Weitere Stimmenabgaben sind nicht möglich
