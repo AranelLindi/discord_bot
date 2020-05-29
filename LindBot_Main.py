@@ -8,8 +8,6 @@ from discord.ext import commands
 # Python-Bibliotheken
 import datetime # Für time-Kommando
 
-
-
 # Instanz von Client. Verbindung zu Discord:
 client = discord.Client()
 
@@ -108,29 +106,60 @@ async def join(ctx, arg):
 # ----------------ABSTIMMUNG--------------------
 # ##############################################
 #
+CurrentVoting = False # globale Variable: Möchte eine Funktion diese verwenden,
+# muss diese in der Funktion mit 'global CurrentVoting' erneut deklariert werden!
+
 @bot.command(name='Voting')
-async def voting(ctx, arg: str):
-    #CurrentVoting:bool
-    #if CurrentVoting == True:
-    #    await ctx.send("Sorry, es läuft bereits eine Abstimmung!")
-    #    return
+async def voting(ctx, arg: str, *arg2):
+    global CurrentVoting
+    if CurrentVoting == True:
+        await ctx.send("Sorry, es läuft bereits eine Abstimmung!")
+        return
     if len(arg) == 0:
         await ctx.send("Fehlendes Abstimmungsargument!")
         return
-    await ctx.send(f"Abstimmung von *{ctx.author.name}* über folgendes Thema gestartet: ***" + arg + "***")
 
+    # Läuft noch keine Abstimmung und stimmen sonst alle Bedingungen, die globale Variable auf True setzen und
+    # mit dem weiteren Prozedere fortfahren:
+    CurrentVoting = True
+
+    await ctx.send(f"*Abstimmung von* __{ctx.author.name}__ *über folgendes Thema gestartet*: ***" + arg + "***")
+
+    number = 1
+    Zeichenkette = ""
+    # durch Optionen iterieren:
+    for x in arg2:
+        Zeichenkette += "***" + str(number) + "***.) " + x + "\n"
+        number += 1
+
+    # Sicherheitsabfrage: Es müssen wenigstens zwei Abstimmungsoptionen zur Verfügung stehen, alles andere macht keinen Sinn:
+    if number < 2:
+        await ctx.send("Du musst mindestens zwei Wahlmöglichkeiten festlegen! Abbruch!")
+        return
+
+
+    await ctx.send("__**Zur Auswahl stehen:**__\n" + Zeichenkette + "\n\n Stimme ab mit: **!Vote [Nr]**")
     # Es ist immer nur eine Abstimmung möglich!
     #CurrentVoting = True
 
     # Abstimmungsklasse laden:
     bot.load_extension('VotingClass')
-
+    #Voting = VotingClass()
 
     #await ctx.send("Modul geladen!")
 
 
+# Beendet eine Abstimmung und entläd das entsprechende Cog (d.h. Kommandos die in VotingClass deklariert sind, funktionieren nicht mehr!)
+@bot.command(name='CloseVoting')
+async def CloseVoting(ctx):
+    global CurrentVoting # globale Variable
 
-
+    # Erste prüfen ob überhaupt eine Abstimmung gestartet wurde:
+    if CurrentVoting == True:
+        bot.unload_extension('VotingClass')
+        await ctx.send("Abstimmung beendet!")
+#
+#
 # ##############################################
 # ---------------WOHER KOMME ICH?---------------
 # ##############################################

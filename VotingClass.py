@@ -15,8 +15,13 @@ class VotingClass(commands.Cog):
 
     def __init__(self, bot):  # Konstruktor
         self.bot = bot
-        self.countVoteOptions = 0
+        #self.countVoteOptions = 0
+        print("Konstruktor wurde aufgerufen!")
         # self.__Organizer = organizer  # User der Abstimmung eingeleitet hat
+
+
+    def __del__(self):
+        print("Destruktor wurde aufgerufen!")
 
     # speichert, wer die Abstimmung begonnen hat. Nur dieser hat Zugriff auf manche Kommandos
     def setCreator(self, creator):
@@ -25,16 +30,25 @@ class VotingClass(commands.Cog):
     # Allgemein:
     # Kommandos sind noch nicht final! Zum Ende hin, griffigere Begriffe einführen!
 
-    @commands.command(name='addVotingOption')
-    async def addVotingOption(self, ctx, option: str):
+    #@commands.command(name='addVotingOption')
+    #async def addVotingOption(self, ctx, option: str):
         # zuerst prüfen ob 'option' bereits im dict ist
-        if option not in self.__Options.values():
+    #    if option not in self.__Options.values():
             # neue Option hinzufügen:
-            newOption = VoteOption(option)
-            self.__Options.update(self.countVoteOptions, newOption)
-        else:
+    #        newOption = VoteOption(option)
+            #self.__Options.update(self.countVoteOptions, newOption)
+    #    else:
             # Option bereits vorhanden:
-            await ctx.channel.send("- Option bereits vorhanden! -")
+    #        await ctx.channel.send("- Option bereits vorhanden! -")
+    def addVotingOption(self, number:int, arg:str):
+        # Neues VoteOption Objekt mit arg (Abstimmungsbeschreibung) erstellen:
+        Option = VoteOption(arg)
+
+        # Ein Pair zusammen mit der fortlaufenden Nummer (NICHT Stimmenanzahl!) erstellen:
+        pair = zip( number, Option )
+
+        # Dem Dictionary das Pair hinzufügen:
+        self.__Options.update(pair)
     #
     #
 
@@ -83,17 +97,18 @@ class VotingClass(commands.Cog):
     #
     #
 
-    @commands.command(name="CloseVoting")
-    async def closeVoting(self, ctx):
+    #@commands.command(name="CloseVoting")
+    #async def closeVoting(self, ctx):
         # Schließt die Abstimmung: Weitere Stimmenabgaben sind nicht möglich
         # nun kann nur noch das Ergebnis verkündet werden
-        if ctx.author.id == self.__Organizer:
+    #    if ctx.author.id == self.__Organizer:
             # Zuerst Stimmenabgabe unmöglich machen:
-            self.__Pause = True
+    #        self.__Pause = True
 
             # Dann: Ergebnis posten
 
-        self.bot.remove_cog('VotingClass')
+        #self.bot.remove_cog('VotingClass')
+    #    teardown(self.bot) # Damit kann sich das Objekt selbst zerstören
 
 
 # Aus der discord API Referenz:
@@ -101,3 +116,9 @@ class VotingClass(commands.Cog):
 # point on what to do when the extension is loaded. This entry point must have a single argument, the bot.
 def setup(bot):
     bot.add_cog(VotingClass(bot))
+
+
+# Nötig, falls das Cog nicht mehr gebraucht wird und entladen werden soll. Die Kommandos stehen
+# dann nicht mehr zu Verfügung, bis eine neue Abstimmung erzeugt wurde.
+def teardown(bot):
+    bot.unload_extension(VotingClass(bot))
