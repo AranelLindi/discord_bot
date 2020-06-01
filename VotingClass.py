@@ -105,14 +105,24 @@ class VotingClass(commands.Cog):
         # TODO: [ Hier fehlt noch eine Prüfung ob der User berechtigt ist, diese Funktion auszuführen! ]
 
         # 1.) Anzahl der Stimmen ermitteln, dazu durch gesamtes dict iterieren und Stimmen zählen
+<<<<<<< HEAD
         anzahlGesamtstimmten = 0
         for x in self.__options.values():
             anzahlGesamtstimmten += x.votes  # Stimmen jeder Wahloption aufaddieren
+=======
+        anzahlgesamtstimmten = 0
+        for x in self.__Options.values():
+            anzahlgesamtstimmten += x.votes  # Stimmen jeder Wahloption aufaddieren
+>>>>>>> 677eea346d0112ee2a3a63499a0e10071c92b4fb
 
         # Obligatorische Prüfung ob Gesamtanzahl Stimmen gleich 0 ist.
         # Dann würde unten eine Division durch Null stehen. Hier dann
         # also abbrechen:
+<<<<<<< HEAD
         if anzahlGesamtstimmten == 0:
+=======
+        if anzahlgesamtstimmten == 0:
+>>>>>>> 677eea346d0112ee2a3a63499a0e10071c92b4fb
             await ctx.send("Abgegebene Anzahl Stimmen: 0. Abbruch!")
             return
 
@@ -158,7 +168,11 @@ class VotingClass(commands.Cog):
 
             # String für Ausgabe bilden, dazu mittels der beiden Lambda-Funktionen die Stärke des Balkens ermitteln:
             Zeichenkette += "***" + str(counter) + "***.)\t" + \
+<<<<<<< HEAD
                 "**" + str(AnzahlBalken(VerhältnisBalken(OptionStimmen, anzahlGesamtstimmten, 20))) + "**" \
+=======
+                "**" + str(AnzahlBalken(VerhältnisBalken(OptionStimmen, anzahlgesamtstimmten, 20))) + "**" \
+>>>>>>> 677eea346d0112ee2a3a63499a0e10071c92b4fb
                 "\t(" + \
                 str(OptionStimmen) + \
                 ")" + \
@@ -183,7 +197,11 @@ class VotingClass(commands.Cog):
                 "Hmm, es sieht so aus, als gäbe es ein Unentschieden?! Gleich nochmal abstimmen!"
 
         Zeichenkette += "\nAbgegebene Stimmen: **" + \
+<<<<<<< HEAD
             str(anzahlGesamtstimmten) + "**"
+=======
+            str(anzahlgesamtstimmten) + "**"
+>>>>>>> 677eea346d0112ee2a3a63499a0e10071c92b4fb
 
         await ctx.send(Zeichenkette)  # Zeichenkette ausgeben
     #
