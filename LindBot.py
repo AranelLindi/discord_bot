@@ -120,7 +120,7 @@ async def join(ctx, arg):
 # ----------------ABSTIMMUNG--------------------
 # ##############################################
 #
-OngoingVote = False  # globale Variable: Möchte eine Funktion diese verwenden,
+ongoingVote = False  # globale Variable: Möchte eine Funktion diese verwenden,
 # muss diese in der Funktion mit 'global CurrentVoting' erneut deklariert werden!
 # Gibt an, ob aktuell eine Abstimmung läuft. Es kann immer nur eine aktiv sein!
 
@@ -129,8 +129,8 @@ OngoingVote = False  # globale Variable: Möchte eine Funktion diese verwenden,
 
 @bot.command(name='Voting')
 async def voting(ctx, frage: str, *wahloptionen):
-    global OngoingVote
-    if OngoingVote == True:
+    global ongoingVote
+    if ongoingVote == True:
         await ctx.send("Sorry, es läuft bereits eine Abstimmung!")
         return
     if len(frage) == 0:
@@ -139,13 +139,13 @@ async def voting(ctx, frage: str, *wahloptionen):
 
     # Vorprüfung: Anzahl der Wahlmöglichkeiten prüfen und erfassen:
     number = 1  # fortlaufende Nummer um Wahlmöglichkeiten durchzunummerieren
-    Zeichenkette = ""  # Alle Wahlmöglichkeiten verbinden und in einer Nachricht posten
-    ArgumentList = []  # Nötig für Übergabe an VotingClass: Sammeln aller Wahloptionen als List()
+    zeichenkette = ""  # Alle Wahlmöglichkeiten verbinden und in einer Nachricht posten
+    argumentList = []  # Nötig für Übergabe an VotingClass: Sammeln aller Wahloptionen als List()
 
     # durch Optionen iterieren:
     for option in wahloptionen:
-        Zeichenkette += "***" + str(number) + "***.) " + option + "\n"
-        ArgumentList.append(option)
+        zeichenkette += "***" + str(number) + "***.) " + option + "\n"
+        argumentList.append(option)
         number += 1
 
     # letzte Addition rückgängig machen, damit number gleichzeitig Anzahl Wahloptionen darstellt:
@@ -158,11 +158,11 @@ async def voting(ctx, frage: str, *wahloptionen):
 
     # Läuft noch keine Abstimmung und stimmen sonst alle Bedingungen, die globale Variable auf True setzen und
     # mit dem weiteren Prozedere fortfahren:
-    OngoingVote = True
+    ongoingVote = True
 
     # Usern alles mitteilen: (vielleicht noch zum Ende verschieben, da dann Kommandos schon geladen sind und keine Verzögerung mehr entstehen könnte)
     await ctx.send(f"*Abstimmung von* __{ctx.author.name}__ *über folgendes Thema gestartet*: ***" + frage + "***")
-    await ctx.send("__**Zur Auswahl stehen:**__\n" + Zeichenkette + "\n\nMach mit und stimme ab mit: *!Vote [Nr]*")
+    await ctx.send("__**Zur Auswahl stehen:**__\n" + zeichenkette + "\n\nMach mit und stimme ab mit: **!Vote Nr**")
 
     # Abstimmungsklasse laden: (d. h. Kommandos laden und verfügbar machen)
     bot.load_extension('VotingClass')
@@ -172,18 +172,18 @@ async def voting(ctx, frage: str, *wahloptionen):
     print("Anzahl Argumente: " + str(number))
     # if vv is not None: # <------------------- braucht man das noch???????
     # Abstimmungsmöglichkeiten an die Klasse übergeben
-    await staticVotingObject.addVotingOptions(number, ArgumentList)
+    await staticVotingObject.addVotingOptions(number, argumentList)
 
 
 # Beendet eine Abstimmung und entläd das entsprechende Cog (d.h. Kommandos die in VotingClass deklariert sind, funktionieren nicht mehr!)
 @bot.command(name='CloseVoting')
 async def CloseVoting(ctx):
-    global OngoingVote  # globale Variable
+    global ongoingVote  # globale Variable
 
     # Erste prüfen ob überhaupt eine Abstimmung gestartet wurde:
-    if OngoingVote == True:
+    if ongoingVote == True:
         bot.unload_extension('VotingClass')
-        OngoingVote = False  # ermöglicht wieder eine Abstimmung
+        ongoingVote = False  # ermöglicht wieder eine Abstimmung
         await ctx.send("Abstimmung beendet!")
 #
 #

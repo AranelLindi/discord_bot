@@ -10,8 +10,8 @@ from VoteOption import VoteOption  # Objekt für Wahloption
 
 class VotingClass(commands.Cog):
     # GLOBALE VARIABLEN
-    __Voters = {*()}  # Enthält alle, die ihre Stimme abgegeben haben
-    __Options = {}  # Enthält ein Tupel aus key und value, wobei value das VoteOption-Objekt ist und key die fortlaufende Abstimmungsnummer
+    __voters = {*()}  # Enthält alle, die ihre Stimme abgegeben haben
+    __options = {}  # Enthält ein Tupel aus key und value, wobei value das VoteOption-Objekt ist und key die fortlaufende Abstimmungsnummer
 
     def __init__(self, bot):  # Konstruktor
         self.bot = bot
@@ -51,10 +51,10 @@ class VotingClass(commands.Cog):
             # x ist ein String
 
             # neues VoteOption Objekt mit x anlegen:
-            Option = VoteOption(x)
+            option = VoteOption(x)
 
             # Objekt an counter-Stelle einfügen (counter steigt stetig, daher keine Rücksicht auf Überschreibungen etc.)
-            self.__Options[counter] = Option
+            self.__options[counter] = option
 
             # inkrementieren:
             counter += 1
@@ -74,15 +74,15 @@ class VotingClass(commands.Cog):
         # - Ist die Wahloption (option) gültig, also bildet sie auf ein Element im dict ab
 
         # Mit Hilfe von Mengenoperationen prüfen ob Abstimmender schon in der Wählerliste ist:
-        if str(ctx.message.author) not in self.__Voters:
+        if str(ctx.message.author) not in self.__voters:
             # Hier: Hat noch nicht abgestimmt
 
-            if option > 0 and option <= len(self.__Options):
+            if option > 0 and option <= len(self.__options):
                 # Hier: Stimmabgabe bildet auf gültiges Element ab: Stimme ist gültig!
 
                 # Stimme verbuchen:
                 # dazu, dass option-te Element aus dict referenzieren:
-                _VoteOption = self.__Options[option]
+                _VoteOption = self.__options[option]
                 # und Wert seiner Stimme inkrementieren:
                 _VoteOption.votes += 1
             else:
@@ -105,14 +105,14 @@ class VotingClass(commands.Cog):
         # TODO: [ Hier fehlt noch eine Prüfung ob der User berechtigt ist, diese Funktion auszuführen! ]
 
         # 1.) Anzahl der Stimmen ermitteln, dazu durch gesamtes dict iterieren und Stimmen zählen
-        AnzahlGesamtstimmten = 0
-        for x in self.__Options.values():
-            AnzahlGesamtstimmten += x.votes  # Stimmen jeder Wahloption aufaddieren
+        anzahlGesamtstimmten = 0
+        for x in self.__options.values():
+            anzahlGesamtstimmten += x.votes  # Stimmen jeder Wahloption aufaddieren
 
         # Obligatorische Prüfung ob Gesamtanzahl Stimmen gleich 0 ist.
         # Dann würde unten eine Division durch Null stehen. Hier dann
         # also abbrechen:
-        if AnzahlGesamtstimmten == 0:
+        if anzahlGesamtstimmten == 0:
             await ctx.send("Abgegebene Anzahl Stimmen: 0. Abbruch!")
             return
 
@@ -141,7 +141,7 @@ class VotingClass(commands.Cog):
         winner_desc = ""
 
         # durch dict iterieren und schrittweise Ausgabe erstellen sowie Gewinner feststellen:
-        for x in self.__Options.values():
+        for x in self.__options.values():
             # x ist jeweils ein VoteOption-Objekt
 
             # Stimmen der Wahloption bekommen:
@@ -158,7 +158,7 @@ class VotingClass(commands.Cog):
 
             # String für Ausgabe bilden, dazu mittels der beiden Lambda-Funktionen die Stärke des Balkens ermitteln:
             Zeichenkette += "***" + str(counter) + "***.)\t" + \
-                "**" + str(AnzahlBalken(VerhältnisBalken(OptionStimmen, AnzahlGesamtstimmten, 20))) + "**" \
+                "**" + str(AnzahlBalken(VerhältnisBalken(OptionStimmen, anzahlGesamtstimmten, 20))) + "**" \
                 "\t(" + \
                 str(OptionStimmen) + \
                 ")" + \
@@ -183,7 +183,7 @@ class VotingClass(commands.Cog):
                 "Hmm, es sieht so aus, als gäbe es ein Unentschieden?! Gleich nochmal abstimmen!"
 
         Zeichenkette += "\nAbgegebene Stimmen: **" + \
-            str(AnzahlGesamtstimmten) + "**"
+            str(anzahlGesamtstimmten) + "**"
 
         await ctx.send(Zeichenkette)  # Zeichenkette ausgeben
     #
