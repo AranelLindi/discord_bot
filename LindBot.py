@@ -157,7 +157,7 @@ async def voting(ctx, frage: str, *wahloptionen):
 
     # Usern alles mitteilen: (vielleicht noch zum Ende verschieben, da dann Kommandos schon geladen sind und keine Verzögerung mehr entstehen könnte)
     await ctx.send(f"*Abstimmung von* __{ctx.author.name}__ *über folgendes Thema gestartet*: ***" + frage + "***")
-    await ctx.send("__**Zur Auswahl stehen:**__\n" + Zeichenkette + "\n\n Stimme ab mit: **!Vote [Nr]**")
+    await ctx.send("__**Zur Auswahl stehen:**__\n" + Zeichenkette + "\n\nMach mit und stimme ab mit: *!Vote [Nr]*")
 
     # Abstimmungsklasse laden: (d. h. Kommandos laden und verfügbar machen)
     bot.load_extension('VotingClass')
