@@ -70,19 +70,24 @@ async def joined(ctx, *, member: discord.member):
 # async def leave(ctx):
 #    await ctx.voice_client.disconnect()
 
-
 # ##############################################
-# Dieses Vorgehen ist äquivalent zu dem untern Vorgehen mit @bot.command, nur dass dann bot.add_command(...) nicht nötig ist!
-@commands.command(name='a')
-async def test(ctx):
-    print("A a was printed!")
-    await ctx.channel.send("An 'a' was printed!")
+""" Anmerkung:
+    Ein Kommando kann auf zwei äquivalente Arten definiert werden:
 
-bot.add_command(test)
+    @bot.command(...)
+    async def ...
+
+     -oder-
+    
+    @commands.command(...)
+    async def ...
+
+    bot.add_command(...)
+"""
 # ##############################################
 #
 #
-# ############################################## Nice to have ua als Testkommando, funktioniert immer
+# ############################################## (Nice to have ua als Testkommando, funktioniert immer)
 # ---------Postet-die-aktuelle-Uhrzeit----------
 # ##############################################
 
@@ -190,9 +195,9 @@ async def CloseVoting(ctx):
 
 @bot.command(name='Computer_wer_hat_Sie_erschaffen?')
 async def creator(ctx):
-    await ctx.send(f"Das, mein Lieber {ctx.author.name}, \
-        war der allseits bekannte und beliebte Programmierer \
-        Stefan Lindörfer im Jahre des Herrn 2020! *Verbeug*")
+    await ctx.send(f"Das, mein Lieber {ctx.author.name}," +
+                   "war der allseits bekannte und beliebte Programmierer" +
+                   "Stefan Lindörfer im Jahre des Herrn 2020!")
 #
 #
 # ##############################################

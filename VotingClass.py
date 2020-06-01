@@ -119,7 +119,8 @@ class VotingClass(commands.Cog):
         # Im Anschluss, nochmals durch dict iterieren und jetzt das Stimmenverhältnis (Stimmen pro Option / Gesamtstimmen) ausrechnen
         # sowie den Gewinner bzw. ein Unentschieden feststellen
 
-        Zeichenkette = "__Ergebnis:__\n"  # Enthält nacheinander gesamte Ausgabe, die am Schluss gepostet wird
+        # Enthält nacheinander gesamte Ausgabe, die am Schluss gepostet wird
+        Zeichenkette = "__Ergebnis:__\n"
 
         # fortlaufende Nummer um Wahlmöglichkeiten korrekt darzustellen (kann nicht aus dict extrahiert werden, da hier nur durch values() und nicht durch keys() iteriert wird):
         counter = 1
@@ -181,7 +182,8 @@ class VotingClass(commands.Cog):
             Zeichenkette += "\n" + \
                 "Hmm, es sieht so aus, als gäbe es ein Unentschieden?! Gleich nochmal abstimmen!"
 
-        Zeichenkette += "\nAbgegebene Stimmen: **" + str(AnzahlGesamtstimmten) + "**"
+        Zeichenkette += "\nAbgegebene Stimmen: **" + \
+            str(AnzahlGesamtstimmten) + "**"
 
         await ctx.send(Zeichenkette)  # Zeichenkette ausgeben
     #
