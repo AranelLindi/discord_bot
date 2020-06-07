@@ -4,8 +4,7 @@ from discord.ext import commands
 
 from VoteOption import VoteOption  # Objekt für Wahloption
 
-# Stellt einen Cog dar, also eine Ansammlung von Kommandos und dient als
-# Klasse zur Durchführung einer Abstimmung.
+# Stellt einen Cog dar, also eine Ansammlung von Kommandos und dient als Klasse zur Durchführung einer Abstimmung.
 
 
 class VotingClass(commands.Cog):
@@ -15,35 +14,22 @@ class VotingClass(commands.Cog):
 
     def __init__(self, bot):  # Konstruktor
         self.bot = bot
-        self.__Pause = False  # Keine Pause beim initialisieren!
+        self.__pause = False  # Keine Abstimmungspause beim Initialisieren
 
-        #print("Konstruktor wurde aufgerufen!")
-        # self.__Organizer = organizer  # User der Abstimmung eingeleitet hat
-    def __del__(self):  # Destruktor
-        print("Destruktor wurde aufgerufen!")
+    # def __del__(self):  # Destruktor # Wird aktuell nicht benötigt, hat aber funkionert, er wird aufgerufen.
+        # print("Destruktor wurde aufgerufen!") # Hat funktioniert!
 
-    # speichert, wer die Abstimmung begonnen hat. Nur dieser hat Zugriff auf manche Kommandos  [ GERADE NOCH DEAKTIVIERT ]
-    def setCreator(self, creator):
-        self.__Organizer = creator
 
-    # Allgemein:
-    # Kommandos sind noch nicht final! Zum Ende hin, griffigere Begriffe einführen!
+# ############################
+#       HILFSFUNKTIONEN
+# ############################
 
-    # @commands.command(name='addVotingOption')
-    # async def addVotingOption(self, ctx, option: str):
-        # zuerst prüfen ob 'option' bereits im dict ist
-    #    if option not in self.__Options.values():
-        # neue Option hinzufügen:
-    #        newOption = VoteOption(option)
-        #self.__Options.update(self.countVoteOptions, newOption)
-    #    else:
-        # Option bereits vorhanden:
-    #        await ctx.channel.send("- Option bereits vorhanden! -")
+    # Diese Funktion wird ausschließlich durch das Kommando !Voting ... aufgerufen und erhält als Parameter die Wahlmöglichkeiten und den Abstimmungsersteller:
 
-    # Diese Funktion wird ausschließlich durch das Kommando !Voting ... aufgerufen und erhält
-    # als Parameter die Wahlmöglichkeiten. Es ist beabsichtigt, nachträglich weitere
-    # Möglichkeiten hinzufügen bzw. entfernen zu können:
-    def addVotingOptions(self, number: int, arguments):  # , *args):
+    def addVotingOptions(self, number: int, arguments, organizer: str):
+        # Name des Abstimmunsgleiters speichern:
+        self.organizer = organizer
+
         counter = 1  # Fortlaufende Nummer um Wahlmöglichkeiten durchzunumerieren
 
         # Iteriert durch die Liste (arguments)
@@ -58,15 +44,28 @@ class VotingClass(commands.Cog):
 
             # inkrementieren:
             counter += 1
-    #
-    #
+
+    # Vergleicht den übergebenen User (ctx.message.author) mit dem Namen des Abstimmungserstellers und gibt True oder False zurück:
+
+    def permission(self, user):
+        return self.organizer == user
+
+# #####################
+#       KOMMANDOS
+# #####################
+
+
+#   #####################
+#           VOTE
+#   #####################
 
     # Ermöglicht es einem User während einer Abstimmung seine Stimme für eine Wahlmöglichkeit abzugeben:
+
     @commands.command(name="Vote")
     async def Vote(self, ctx, option: int):
         # Zuerst prüfen ob eine Abstimmungspause gilt:
-        if self.__Pause == True:
-            await ctx.send("Stimmabgabe gerade nicht möglich!")
+        if self.__pause == True:
+            await ctx.send("*Stimmabgabe gerade nicht möglich!*")
             return
 
         # Wenn jemand mittels Kommando abgestimmt hat, folgendes prüfen:
@@ -80,49 +79,46 @@ class VotingClass(commands.Cog):
             if option > 0 and option <= len(self.__options):
                 # Hier: Stimmabgabe bildet auf gültiges Element ab: Stimme ist gültig!
 
-                # Stimme verbuchen:
-                # dazu, dass option-te Element aus dict referenzieren:
+                # Stimme verbuchen. Dazu, das option-te Element aus dict referenzieren...
                 _VoteOption = self.__options[option]
-                # und Wert seiner Stimme inkrementieren:
+                # ...und Wert seiner Stimme inkrementieren:
                 _VoteOption.votes += 1
-            else:
-                # Hat jemand eine Stimme abgegeben, die auf kein Element abbildet, eine Meldung
-                # ausgeben, da es sich um ein versehen handeln könnte.
-                await ctx.send(f"{ctx.author.name}, du hast für eine ungültige Option gestimmt, aber du bekommst noch eine Chance!")
-        # else:
-            # Hier: User hat schon einmal abgestimmt. Falls erforderlich, 'else:' entkommentieren und hier Vorkehrungen treffen:
-            #print("Du hast schon einmal abgestimmt!")
-    #
-    #
 
-    # Ermöglicht es dem Abstimmungsleiter, das Abstimmungsergebnis zu veröffentlichen. Dabei wird keine Rücksicht darauf
-    # genommen, dass jeder anwesende User seine Stimme abgegeben hat.
+                # anschließend: Wähler in Liste aufnehmen:
+                # TODO Umsetzen nachdem alles getestet wurde
+            else:
+                # Hat jemand eine Stimme (Zahl) abgegeben, die auf kein Element abbildet, eine Meldung ausgeben, da es sich um ein versehen handeln könnte.
+                await ctx.send(f"{ctx.author.name}, Du hast für eine ungültige Option gestimmt, aber Du bekommst noch eine Chance!")
+        else:
+            # Hier: User hat schon einmal abgestimmt. Falls erforderlich, 'else:' entkommentieren und hier Vorkehrungen treffen:
+            await ctx.send(f"{ctx.author.name}, Du Schlingel hast bereits deine Stimme abgegeben!")
+
+
+#   ##########################
+#           SHOW RESULT
+#   ##########################
+
+    # Ermöglicht es dem Abstimmungsleiter, das Abstimmungsergebnis zu veröffentlichen. Dabei wird keine Rücksicht darauf genommen, dass jeder anwesende User seine Stimme abgegeben hat.
+
     @commands.command(name="ShowResult")
     async def showResult(self, ctx):
-        # Darf nur der User ausführen, der die Abstimmmung begonnen hat.
-        # Beendet gleichzeit die Abstimmung und zerstört das Objekt
+        # Darf nur der User ausführen, der die Abstimmmung begonnen hat. Beendet gleichzeit die Abstimmung und zerstört das Objekt
 
         # TODO: [ Hier fehlt noch eine Prüfung ob der User berechtigt ist, diese Funktion auszuführen! ]
+        # TESTEN!:
+        # if ctx.message.author != self.organizer: # POTENZIELLE FEHLERQUELLE: Namensformat nicht sichergestellt. [NAME]#[NUMBER] od. [NAME] - Gerade funktioniert es, aber weiter testen!
+        #    print("Fehler, ungültige Namen!")
+        #    return
+        if not self.permission(ctx.message.author):
+            return
 
         # 1.) Anzahl der Stimmen ermitteln, dazu durch gesamtes dict iterieren und Stimmen zählen
-<<<<<<< HEAD
         anzahlGesamtstimmten = 0
         for x in self.__options.values():
             anzahlGesamtstimmten += x.votes  # Stimmen jeder Wahloption aufaddieren
-=======
-        anzahlgesamtstimmten = 0
-        for x in self.__Options.values():
-            anzahlgesamtstimmten += x.votes  # Stimmen jeder Wahloption aufaddieren
->>>>>>> 677eea346d0112ee2a3a63499a0e10071c92b4fb
 
-        # Obligatorische Prüfung ob Gesamtanzahl Stimmen gleich 0 ist.
-        # Dann würde unten eine Division durch Null stehen. Hier dann
-        # also abbrechen:
-<<<<<<< HEAD
+        # Obligatorische Prüfung ob Gesamtanzahl Stimmen gleich 0 ist. Dann würde unten eine Division durch Null stehen. Hier dann also abbrechen:
         if anzahlGesamtstimmten == 0:
-=======
-        if anzahlgesamtstimmten == 0:
->>>>>>> 677eea346d0112ee2a3a63499a0e10071c92b4fb
             await ctx.send("Abgegebene Anzahl Stimmen: 0. Abbruch!")
             return
 
@@ -130,7 +126,7 @@ class VotingClass(commands.Cog):
         # sowie den Gewinner bzw. ein Unentschieden feststellen
 
         # Enthält nacheinander gesamte Ausgabe, die am Schluss gepostet wird
-        Zeichenkette = "__Ergebnis:__\n"
+        zeichenkette = "__Ergebnis:__\n"
 
         # fortlaufende Nummer um Wahlmöglichkeiten korrekt darzustellen (kann nicht aus dict extrahiert werden, da hier nur durch values() und nicht durch keys() iteriert wird):
         counter = 1
@@ -155,26 +151,29 @@ class VotingClass(commands.Cog):
             # x ist jeweils ein VoteOption-Objekt
 
             # Stimmen der Wahloption bekommen:
-            OptionStimmen = x.votes
+            option_stimmen = x.votes  # DAS HAT FUNKTIONIERT!
 
             # Prüfen ob die aktuelle Option mehr Stimmen gesammelt hat als der bisherige "Gewinner" mit den meisten Stimmen:
-            if OptionStimmen > maxVotes:
-                maxVotes = OptionStimmen
+            if option_stimmen > maxVotes:
+                maxVotes = option_stimmen
                 winner = counter
                 sameResult = 1  # Entspricht 'Zurücksetzen'
-                winner_desc = x.getDescription()
-            elif OptionStimmen == maxVotes:
+                winner_desc = x.name  # x.getDescription()
+            elif option_stimmen == maxVotes:
                 sameResult += 1  # Es gibt eine zweite Option mit genauso vielen Stimmen
 
             # String für Ausgabe bilden, dazu mittels der beiden Lambda-Funktionen die Stärke des Balkens ermitteln:
-            Zeichenkette += "***" + str(counter) + "***.)\t" + \
-<<<<<<< HEAD
-                "**" + str(AnzahlBalken(VerhältnisBalken(OptionStimmen, anzahlGesamtstimmten, 20))) + "**" \
-=======
-                "**" + str(AnzahlBalken(VerhältnisBalken(OptionStimmen, anzahlgesamtstimmten, 20))) + "**" \
->>>>>>> 677eea346d0112ee2a3a63499a0e10071c92b4fb
+            darstellung = AnzahlBalken(VerhältnisBalken(
+                option_stimmen, anzahlGesamtstimmten, 20))
+
+            # Vermeidet Schönheitsfehler bei der Ausgabe, da bei leerem String die Zeichen für Fettschreibweise ** sonst geprintet würden:
+            if len(darstellung) == 0:
+                darstellung = ' '
+
+            zeichenkette += "***" + str(counter) + "***.)\t" + \
+                "**" + str(darstellung) + "**" \
                 "\t(" + \
-                str(OptionStimmen) + \
+                str(option_stimmen) + \
                 ")" + \
                 "\n"
 
@@ -184,7 +183,7 @@ class VotingClass(commands.Cog):
         # An dieser Stelle steht das Ergebnis fest. Daher jetzt noch eine Ausgabe für den Gewinner bzw. Unentschieden dran hängen:
         if sameResult == 1:
             # Es gibt einen eindeutigen Gewinner:
-            Zeichenkette += "\n" + \
+            zeichenkette += "\n" + \
                 "Der Gewinner ist: \t***" + \
                 str(winner) + "***.) ***" + \
                 str(winner_desc) + \
@@ -193,63 +192,71 @@ class VotingClass(commands.Cog):
                 "*** Stimmen!"
         else:
             # Es gibt keinen eindeutigen Gewinner, sondern ein Unentschieden zwischen mindestens zwei Optionen:
-            Zeichenkette += "\n" + \
-                "Hmm, es sieht so aus, als gäbe es ein Unentschieden?! Gleich nochmal abstimmen!"
+            zeichenkette += "\n" + \
+                "Hmm, es sieht so aus, als gäbe es ein Unentschieden?! Stichwahl!?"
 
-        Zeichenkette += "\nAbgegebene Stimmen: **" + \
-<<<<<<< HEAD
+        zeichenkette += "\nAbgegebene Stimmen: **" + \
             str(anzahlGesamtstimmten) + "**"
-=======
-            str(anzahlgesamtstimmten) + "**"
->>>>>>> 677eea346d0112ee2a3a63499a0e10071c92b4fb
 
-        await ctx.send(Zeichenkette)  # Zeichenkette ausgeben
-    #
-    #
+        # Erklären wie die Abstimmung geschlossen wird:
+        zeichenkette += "\nAbstimmung schließen mit: !CloseVoting"
 
-    # Ermöglichst es dem Abstimmungsleiter eine Pause der Stimmenabgabe zu bewirken.
-    # So lange diese gilt, können von keinem User Stimmen abgegeben werden.
-    @commands.command(name="PauseVoting")
-    async def pauseVoting(self, ctx):
-        # Pausiert die Abstimmung: Bisherige Stimmen bleiben erhalten
-        # neue Abstimmungen aber unterbunden
-        self.__Pause = True
+        await ctx.send(zeichenkette)  # Zeichenkette ausgeben
+
+    # Ermöglichst es dem Abstimmungsleiter eine Pause der Stimmenabgabe zu bewirken. So lange diese gilt, können von keinem User Stimmen abgegeben werden.
+
+
+#   ######################
+#           PAUSE
+#   ######################
+
+    # Pausiert die Abstimmung: Bisherige Stimmen bleiben erhalten neue Abstimmungen werden aber unterbunden
+
+    @commands.command(name="Pause", help="Pausiert die Abstimmung")
+    async def pause(self, ctx):
+
+        # Darf nur der Abstimmungsleiter, daher prüfen
+        if not self.permission(ctx.message.author):
+            return
+
+        self.__pause = True
         await ctx.channel.send("*Abstimmung wurde unterbrochen!*")
-    #
-    #
+
+
+#   #########################
+#           CONTINUE
+#   #########################
 
     # Erlaubt es von Seiten des Abstimmungsleiters wieder, Stimmen abzugeben.
-    @commands.command(name="AllowVoting")
-    async def allowVoting(self, ctx):
+
+    @commands.command(name="Continue", help="Abstimmung weiterführen")
+    async def cont(self, ctx):
         # Erlaubt das Abstimmen wieder für alle
-        self.__Pause = False
+        # Darf nur der Abstimmungsleiter, daher prüfen
+        if not self.permission(ctx.message.author):
+            return
+
+        self.__pause = False
         await ctx.channel.send("*Abstimmung läuft wieder!*")
-    #
-    #
 
-    # CLOSE VOTING WURDE IN DAS MAIN FILE VERSCHOBEN UM DAS COG WIEDER ENTLADEN ZU KÖNNEN. HIER WÜRDE DAS NÄMLICH NICHT FUNKTIONIEREN
-    # @commands.command(name="CloseVoting")
-    # async def closeVoting(self, ctx):
-        # Schließt die Abstimmung: Weitere Stimmenabgaben sind nicht möglich
-        # nun kann nur noch das Ergebnis verkündet werden
-    #    if ctx.author.id == self.__Organizer:
-        # Zuerst Stimmenabgabe unmöglich machen:
-    #        self.__Pause = True
+# ################################
+#       DISCORD REGLEMENT
+# ################################
 
-        # Dann: Ergebnis posten
 
-        # self.bot.remove_cog('VotingClass')
-    #    teardown(self.bot) # Damit kann sich das Objekt selbst zerstören
+# Zur Info, falls benötigt: Wie man ein Cog wieder entläd
+# self.bot.remove_cog('VotingClass')
+# teardown(self.bot) # Damit kann sich das Objekt selbst zerstören
 
 
 # Aus der discord API Referenz:
-# An extension (Anmerkung: Cog Extension) must have a global function, setup defined as the entry
-# point on what to do when the extension is loaded. This entry point must have a single argument, the bot.
+# An extension (Anmerkung: Cog Extension) must have a global function, setup defined as the entry point on what to do when the extension is loaded. This entry point must have a single argument, the bot.
 def setup(bot):
+    # ruft gleichzeitig den Konstruktor von VotingClass auf
     bot.add_cog(VotingClass(bot))
 
 
-# Nötig, falls das Cog nicht mehr gebraucht wird und entladen werden soll. Die Kommandos stehen
-# dann nicht mehr zu Verfügung, bis eine neue Abstimmung erzeugt wurde.
+# Nötig, falls das Cog nicht mehr gebraucht wird und entladen werden soll. Die Kommandos stehen dann nicht mehr zu Verfügung, bis eine neue Abstimmung erzeugt wurde.
 def teardown(bot):
+    # ruft gleichzeitig den Destruktor von VotingClass auf
     bot.unload_extension(VotingClass(bot))
