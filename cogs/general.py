@@ -7,8 +7,19 @@ import asyncio
 
 class General(commands.Cog):
     def __init__(self, bot):
-        self.bot = bot
-        self.start_time = time.time()
+        self.bot = bot # Bot instance (Discord structure)
+        self.start_time = time.time() # Necessary to calculate uptime
+        self.reminders = 0 # Counter for reminders
+
+    async def cog_check(self, ctx):
+        if not self.bot.active and ctx.command.name != "enable":
+            return False
+        return True
+#    @commands.Cog.listener()
+#    async def on_message(self, message):
+#        if not self.active and not message.content.startswith("!"):
+#            return # Ignores all messages if the bot is disabled
+#        await self.bot.process_commands(message) # otherwise react to message according to commands
 
     @commands.command(name="time", help="Postet die aktuelle Uhrzeit")
     async def time(self, ctx):
@@ -18,6 +29,9 @@ class General(commands.Cog):
 
     @commands.command(name="roll", help="Würfelt eine Zahl zwischen 1 und X (Standard: 6)")
     async def roll(self, ctx, max_number: int = 6):
+        if max_number > 10e6:
+            return
+
         result = random.randint(1, max_number)
         await ctx.send(f"{ctx.author.name} hat eine {result} gewürfelt!")
 
@@ -40,15 +54,45 @@ class General(commands.Cog):
 
     @commands.command(name="remindme", help="Setzt eine Erinnerung")
     async def remindme(self, ctx, time_seconds: int, *, message: str):
-        await ctx.send(f"Erinnerung gesetzt für {time_seconds} Sekunden: {message}")
-        await asyncio.sleep(time_seconds)
-        await ctx.send(f"{ctx.author.mention}, Erinnerung: {message}")
+        if self.reminders > 3:
+            return
+
+        self.reminders += 1
+
+        try:
+            await ctx.send(f"Erinnerung gesetzt für {time_seconds} Sekunden: {message}")
+            await asyncio.sleep(time_seconds)
+            await ctx.send(f"{ctx.author.mention}, Erinnerung: {message}")
+        finally:
+            self.reminders -= 1 # Finally guaranteers secure decrementation
 
     @commands.command(name='Computer_wer_hat_Sie_erschaffen?', help="")
     async def creator(self, ctx):
         await ctx.send(f"Das, mein Lieber {ctx.author.name}," +
                     "war der allseits bekannte und beliebte Programmierer" +
                     "Stefan Lindörfer im Jahre des Herrn 2020")
+        
+    @commands.command(name="disable", help="Deaktiviert den Bot (nur für Admins)")
+    @commands.has_permissions(administrator=True) # Nur für Admins!
+    async def disable(self, ctx):
+        self.bot.active = False
+        await ctx.send("LindBot wurde deaktiviert!")
+
+    @commands.command(name="enable", help="Aktiviert den Bot wieder (Nur Admins)")
+    @commands.has_permissions(administrator=True) # Nur für Admins
+    async def enable(self, ctx):
+        self.bot.active = True
+        await ctx.send("LindBot wurde aktiviert")
+
+    @commands.command(name="clear", help="Löscht die letzten X Nachrichten (nur Admins)")
+    @commands.has_permissions(administrator=True) # Nur für Admins
+    async def clear(self, ctx, amount: int = 0):
+        if amount < 1:
+            await ctx.send("Bitte gib eine Zahl größer als 0 an.")
+            return
+        
+        deleted = await ctx.channel.purge(limit=amount)
+        await ctx.send(f"{len(deleted)} Nachrichten wurden gelöscht.", delete_after=5) # Antwort verschwindet nach 5 Sekunden
 
 # Setup-Funktion, damit der Bot das Modul laden kann
 async def setup(bot):

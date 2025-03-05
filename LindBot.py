@@ -15,6 +15,7 @@ intents.message_content = True
 
 # Bot initialisieren
 bot = commands.Bot(command_prefix="!", intents=intents)
+bot.active = True
 
 # Fehlerbehandlung (muss VOR dem Bot-Start definiert werden!)
 @bot.event
@@ -34,14 +35,21 @@ async def on_ready():
 
 # Lade alle Cogs (Module)
 async def load_extensions():
-    for cog in ["general", "voting", "calendar"]:
-        await bot.load_extension(f"cogs.{cog}")
-    print("Alle Module erfolgreich geladen!")
+    cogs = ["general", "voting", "calendar"] # Add further cogs here ...
+    
+    for cog in cogs:
+        try:
+            await bot.load_extension(f"cogs.{cog}")
+            print(f"Modul '{cog}' erfolgreich geladen.")
+        except Exception as e:
+            print(f"Fehler beim Laden von '{cog}': {e}")
 
 # Hauptfunktion, die alles startet
 async def main():
     await load_extensions()
     await bot.start(TOKEN)
 
-# Bot starten
-asyncio.run(main())
+# Nur starten, wenn die Datei direkt ausgeführt wird
+if __name__ == '__main__':
+    # Bot starten
+    asyncio.run(main())

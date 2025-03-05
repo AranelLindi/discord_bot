@@ -2,10 +2,13 @@ version: "3.8"
 
 services:
   discord-bot:
-    build:
-    container_name: discord-bot
-    restart: unless-stopped
-    environment:
-      - DISCORD_TOKEN=${DISCORD_TOKEN}
+    build: .  # Baut das Docker-Image aus dem aktuellen Verzeichnis
+    container_name: discord-bot  # Setzt einen festen Container-Namen
+    restart: always  # Stellt sicher, dass der Container beim Systemstart neu gestartet wird
     env_file:
-      - .env
+      - .env  # Lädt Umgebungsvariablen aus der .env Datei
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "5m"  # Maximal 5 MB pro Log-Datei
+        max-file: "3"   # Maximal 3 Log-Dateien speichern, ältere werden gelöscht

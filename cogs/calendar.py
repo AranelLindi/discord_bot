@@ -1,13 +1,21 @@
-import json
-import os
+import locale # Für deutsche Tagenamen
+import json # für Termine im Kalender
+import os 
 import datetime
 from discord.ext import commands
 
 EVENTS_FILE = "events.json"
 
+locale.setlocale(locale.LC_TIME, "de_DE.utf8") # für dt. Namensschema bei Tagen
+
 class Calendar(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
+
+    async def cog_check(self, ctx): # Wenn Bot deaktiviert ist, soll er auf keine Nachrichten reagieren
+        if not self.bot.active:
+            return False
+        return True
 
     # Hilfsfunktion: Events laden
     def load_events(self):
@@ -21,7 +29,7 @@ class Calendar(commands.Cog):
         with open(EVENTS_FILE, "w") as f:
             json.dump(events, f, indent=4)
 
-    @commands.command(name="wochentag", help="Zeigt den Wochentag für ein bestimmtes Datum")
+    @commands.command(name="day", help="Zeigt den Wochentag für ein bestimmtes Datum")
     async def wochentag(self, ctx, datum: str):
         try:
             date_obj = datetime.datetime.strptime(datum, "%d.%m.%Y").date()

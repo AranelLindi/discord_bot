@@ -13,6 +13,11 @@ class Voting(commands.Cog):
         self.voting_options = {}  # Speichert Optionen als {Nummer: _VoteOption}
         self.voters = set()  # Speichert Nutzer, die bereits abgestimmt haben
 
+    async def cog_check(self, ctx):
+        if not self.bot.active:
+            return False
+        return True
+
     @commands.command(name='Voting', help="Startet eine Abstimmung")
     async def voting(self, ctx, frage: str, *wahloptionen):
         if self.ongoingVote:
