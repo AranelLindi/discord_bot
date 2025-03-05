@@ -2,7 +2,7 @@ version: "3.8"
 
 services:
   discord-bot:
-    build: .  # Baut das Docker-Image aus dem aktuellen Verzeichnis
+    image: discord-bot
     container_name: discord-bot  # Setzt einen festen Container-Namen
     restart: always  # Stellt sicher, dass der Container beim Systemstart neu gestartet wird
     env_file:

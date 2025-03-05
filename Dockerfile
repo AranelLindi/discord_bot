@@ -8,12 +8,11 @@ WORKDIR /app
 COPY requirements.txt ./
 COPY .env ./
 COPY LindBot.py ./
-COPY cogs/ cogs/ # Kopiert den gesamten 'cogs' Ordner
+COPY cogs/ ./cogs/
 COPY events.json ./
 COPY README.md ./
 
 # Installiert die nötigen Python Abhängigkeiten
 RUN pip install --no-cache-dir -r requirements.txt
-
 # Startet den Bot
 CMD ["python", "LindBot.py"]
