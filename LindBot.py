@@ -4,6 +4,9 @@ from discord.ext import commands
 import os
 from dotenv import load_dotenv
 import asyncio  # Für das asynchrone Starten
+import sys
+
+sys.stdout.reconfigure(line_buffering=True)
 
 # Token und Konfiguration laden
 load_dotenv()
